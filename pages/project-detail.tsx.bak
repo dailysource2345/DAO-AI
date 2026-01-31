@@ -1,0 +1,1511 @@
+import { ModernNav } from "@/components/modern-nav";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Star,
+  Shield,
+  ExternalLink,
+  ThumbsUp,
+  Share2,
+  Flag,
+  Calendar,
+  Globe,
+  Mail,
+  Phone,
+  MapPin,
+  TrendingUp,
+  CheckCircle2,
+  Search,
+  Filter,
+  X
+} from "lucide-react";
+import { Link, useParams } from "wouter";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+
+// Mock project data - this would come from API in production
+const MOCK_PROJECTS = {
+  "1": {
+    id: 1,
+    name: "MetaMask",
+    slug: "metamask",
+    category: "Wallets",
+    logo: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=200&h=200&fit=crop",
+    bannerGradient: "from-orange-500 via-orange-400 to-yellow-500",
+    rating: 4.7,
+    reviewCount: 8542,
+    description: "MetaMask is the most popular browser extension wallet for Ethereum and EVM-compatible chains. It allows users to store, send, and receive cryptocurrencies and interact with decentralized applications (dApps) seamlessly. With over 30 million users worldwide, MetaMask has become the gateway to Web3 for millions.",
+    verified: true,
+    website: "https://metamask.io",
+    email: "support@metamask.io",
+    founded: "2016",
+    ratingBreakdown: {
+      5: 88,
+      4: 7,
+      3: 2,
+      2: 1,
+      1: 2
+    },
+    features: ["Multi-chain support", "Browser extension", "Mobile app", "Hardware wallet integration", "NFT support"],
+    reviews: [
+      {
+        id: 1,
+        author: "Sarah Chen",
+        initials: "SC",
+        date: "2 days ago",
+        rating: 5,
+        title: "Best wallet for beginners and pros",
+        content: "I've been using MetaMask for over 2 years and it's been incredible. The interface is intuitive, security is top-notch, and it works seamlessly with all my favorite dApps. Customer support has always been responsive when I needed help.",
+        verified: true,
+        helpful: 47
+      },
+      {
+        id: 2,
+        author: "Mike Johnson",
+        initials: "MJ",
+        date: "1 week ago",
+        rating: 5,
+        title: "Essential Web3 tool",
+        content: "MetaMask makes interacting with Web3 so easy. The swap feature is convenient, and I love how it supports multiple networks. Setup was straightforward, and the security features give me peace of mind.",
+        verified: true,
+        helpful: 32
+      },
+      {
+        id: 3,
+        author: "Alex Rivera",
+        initials: "AR",
+        date: "2 weeks ago",
+        rating: 4,
+        title: "Great wallet with minor issues",
+        content: "Overall a solid wallet. Sometimes the gas estimates are a bit off, but that's a minor issue. The mobile app syncs perfectly with the extension which is very convenient.",
+        verified: false,
+        helpful: 18
+      }
+    ]
+  },
+  "2": {
+    id: 2,
+    name: "Phantom",
+    slug: "phantom",
+    category: "Wallets",
+    logo: "https://images.unsplash.com/photo-1642104704074-907c0698cbd9?w=200&h=200&fit=crop",
+    bannerGradient: "from-purple-500 via-violet-500 to-indigo-500",
+    rating: 4.9,
+    reviewCount: 6234,
+    description: "Phantom is the leading Solana wallet with a beautiful UI and seamless NFT support. Manage your Solana tokens, NFTs, and interact with Solana dApps with ease. Known for its exceptional user experience and innovative features.",
+    verified: true,
+    website: "https://phantom.app",
+    email: "support@phantom.app",
+    founded: "2021",
+    ratingBreakdown: {
+      5: 90,
+      4: 6,
+      3: 2,
+      2: 1,
+      1: 1
+    },
+    features: ["Solana native", "Beautiful UI", "NFT gallery", "In-app swaps", "Multi-chain support"],
+    reviews: [
+      {
+        id: 1,
+        author: "Carlos Rodriguez",
+        initials: "CR",
+        date: "1 day ago",
+        rating: 5,
+        title: "Best Solana wallet hands down",
+        content: "Phantom is absolutely gorgeous and so easy to use. The NFT display is amazing, and transactions are lightning fast. The team is always adding new features. This is what all wallets should aspire to be.",
+        verified: true,
+        helpful: 52
+      },
+      {
+        id: 2,
+        author: "Maya Patel",
+        initials: "MP",
+        date: "4 days ago",
+        rating: 5,
+        title: "Incredible user experience",
+        content: "Coming from other wallets, Phantom is a breath of fresh air. Everything just works, and it looks beautiful doing it. The swap feature is super convenient and the NFT support is top-notch.",
+        verified: true,
+        helpful: 38
+      },
+      {
+        id: 3,
+        author: "Tom Anderson",
+        initials: "TA",
+        date: "1 week ago",
+        rating: 5,
+        title: "Perfect for Solana ecosystem",
+        content: "If you're in the Solana ecosystem, Phantom is a must-have. Fast, secure, and the interface is so intuitive. Love the auto-lock feature and the transaction history is very detailed.",
+        verified: false,
+        helpful: 29
+      }
+    ]
+  },
+  "3": {
+    id: 3,
+    name: "Trust Wallet",
+    slug: "trust-wallet",
+    category: "Wallets",
+    logo: "https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=200&h=200&fit=crop",
+    bannerGradient: "from-blue-500 via-blue-400 to-cyan-500",
+    rating: 4.5,
+    reviewCount: 12340,
+    description: "Trust Wallet is a secure multi-chain wallet trusted by millions worldwide. Support for 70+ blockchains and 4.5 million+ assets makes it one of the most comprehensive wallets available. Your keys, your crypto.",
+    verified: true,
+    website: "https://trustwallet.com",
+    email: "support@trustwallet.com",
+    founded: "2017",
+    ratingBreakdown: {
+      5: 75,
+      4: 15,
+      3: 5,
+      2: 3,
+      1: 2
+    },
+    features: ["70+ blockchains", "DApp browser", "Staking support", "NFT support", "Built-in DEX"],
+    reviews: [
+      {
+        id: 1,
+        author: "Linda Chen",
+        initials: "LC",
+        date: "2 days ago",
+        rating: 5,
+        title: "Most comprehensive wallet",
+        content: "Trust Wallet supports every chain I need. The DApp browser works great and I can stake directly from the wallet. Security features are excellent and I feel my assets are safe.",
+        verified: true,
+        helpful: 41
+      },
+      {
+        id: 2,
+        author: "James Wilson",
+        initials: "JW",
+        date: "5 days ago",
+        rating: 4,
+        title: "Solid multi-chain wallet",
+        content: "Great wallet for managing multiple chains. The interface could be a bit more modern, but it's reliable and has all the features I need. Customer support is responsive.",
+        verified: true,
+        helpful: 27
+      },
+      {
+        id: 3,
+        author: "Sophie Martinez",
+        initials: "SM",
+        date: "1 week ago",
+        rating: 5,
+        title: "Trusted and reliable",
+        content: "Been using Trust Wallet for years. Never had any issues. The staking rewards are great and the wallet keeps adding support for new chains. Highly recommended!",
+        verified: false,
+        helpful: 33
+      }
+    ]
+  },
+  "4": {
+    id: 4,
+    name: "Ledger Live",
+    slug: "ledger-live",
+    category: "Wallets",
+    logo: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=200&h=200&fit=crop",
+    bannerGradient: "from-gray-700 via-gray-600 to-gray-500",
+    rating: 4.6,
+    reviewCount: 5678,
+    description: "Ledger Live is the companion app for Ledger hardware wallets, providing maximum security for your crypto assets. Manage your portfolio, buy, sell, and stake crypto while keeping your keys secure on your hardware device.",
+    verified: true,
+    website: "https://ledger.com",
+    email: "support@ledger.com",
+    founded: "2014",
+    ratingBreakdown: {
+      5: 82,
+      4: 10,
+      3: 4,
+      2: 2,
+      1: 2
+    },
+    features: ["Hardware wallet integration", "Maximum security", "Staking", "Portfolio tracking", "Buy/Sell crypto"],
+    reviews: [
+      {
+        id: 1,
+        author: "Robert Kim",
+        initials: "RK",
+        date: "3 days ago",
+        rating: 5,
+        title: "Best security solution",
+        content: "If security is your priority, Ledger Live with a hardware wallet is the way to go. Peace of mind knowing my keys are offline. The app makes it easy to manage everything.",
+        verified: true,
+        helpful: 56
+      },
+      {
+        id: 2,
+        author: "Emily Davis",
+        initials: "ED",
+        date: "6 days ago",
+        rating: 5,
+        title: "Essential for serious holders",
+        content: "Ledger Live is perfect for long-term holders. The interface is clean, staking is straightforward, and knowing my crypto is secured by hardware wallet gives me confidence.",
+        verified: true,
+        helpful: 42
+      },
+      {
+        id: 3,
+        author: "Michael Brown",
+        initials: "MB",
+        date: "2 weeks ago",
+        rating: 4,
+        title: "Very secure, slight learning curve",
+        content: "Takes a bit to set up but once you do, it's the most secure way to store crypto. The app keeps improving with regular updates. Worth the investment.",
+        verified: false,
+        helpful: 31
+      }
+    ]
+  },
+  "5": {
+    id: 5,
+    name: "Uniswap",
+    slug: "uniswap",
+    category: "Exchanges",
+    logo: "https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=200&h=200&fit=crop",
+    bannerGradient: "from-pink-500 via-pink-400 to-rose-500",
+    rating: 4.8,
+    reviewCount: 15234,
+    description: "Uniswap is the leading decentralized exchange for ERC-20 token swaps. Trade directly from your wallet with no registration required. Deep liquidity and fair pricing through automated market making.",
+    verified: true,
+    website: "https://uniswap.org",
+    email: "contact@uniswap.org",
+    founded: "2018",
+    ratingBreakdown: {
+      5: 85,
+      4: 9,
+      3: 3,
+      2: 2,
+      1: 1
+    },
+    features: ["Decentralized", "No KYC required", "Deep liquidity", "AMM protocol", "Multi-chain"],
+    reviews: [
+      {
+        id: 1,
+        author: "Alex Thompson",
+        initials: "AT",
+        date: "1 day ago",
+        rating: 5,
+        title: "The standard for DEXs",
+        content: "Uniswap is the gold standard for decentralized exchanges. Liquidity is excellent, slippage is minimal, and the interface is clean. Gas fees can be high but that's Ethereum, not Uniswap.",
+        verified: true,
+        helpful: 67
+      },
+      {
+        id: 2,
+        author: "Rachel Green",
+        initials: "RG",
+        date: "3 days ago",
+        rating: 5,
+        title: "Best DEX experience",
+        content: "I've tried many DEXs and Uniswap is by far the best. Easy to use, great pricing, and I trust the protocol. The v3 concentrated liquidity is brilliant.",
+        verified: true,
+        helpful: 48
+      },
+      {
+        id: 3,
+        author: "David Lee",
+        initials: "DL",
+        date: "1 week ago",
+        rating: 5,
+        title: "Reliable and trustworthy",
+        content: "Never had any issues with Uniswap. Swaps are fast, prices are fair, and the protocol is battle-tested. This is what DeFi is all about.",
+        verified: false,
+        helpful: 39
+      }
+    ]
+  },
+  "6": {
+    id: 6,
+    name: "Jupiter",
+    slug: "jupiter",
+    category: "Exchanges",
+    logo: "https://images.unsplash.com/photo-1640340434855-6084b1f4901c?w=200&h=200&fit=crop",
+    bannerGradient: "from-emerald-500 via-teal-500 to-cyan-500",
+    rating: 4.9,
+    reviewCount: 8956,
+    description: "Jupiter is the best liquidity aggregator on Solana with optimal routing. Get the best prices for your swaps by automatically routing through multiple DEXs. Fast, efficient, and user-friendly.",
+    verified: true,
+    website: "https://jup.ag",
+    email: "hello@jup.ag",
+    founded: "2021",
+    ratingBreakdown: {
+      5: 93,
+      4: 4,
+      3: 1,
+      2: 1,
+      1: 1
+    },
+    features: ["Liquidity aggregation", "Best price routing", "Limit orders", "DCA", "Fast execution"],
+    reviews: [
+      {
+        id: 1,
+        author: "Chris Anderson",
+        initials: "CA",
+        date: "1 day ago",
+        rating: 5,
+        title: "Best DEX aggregator period",
+        content: "Jupiter is incredible. Always gets me the best price by routing through multiple DEXs. The limit order feature is amazing. Lightning fast on Solana. Can't recommend enough!",
+        verified: true,
+        helpful: 71
+      },
+      {
+        id: 2,
+        author: "Nina Patel",
+        initials: "NP",
+        date: "2 days ago",
+        rating: 5,
+        title: "Game changer for Solana",
+        content: "Jupiter has become my go-to for all Solana swaps. The routing is smart, prices are always competitive, and the UI is beautiful. DCA feature is super useful.",
+        verified: true,
+        helpful: 58
+      },
+      {
+        id: 3,
+        author: "Marcus Johnson",
+        initials: "MJ",
+        date: "5 days ago",
+        rating: 5,
+        title: "Flawless execution",
+        content: "Never had a failed transaction. Always get great prices. The team keeps shipping new features. This is what a DEX should be like.",
+        verified: false,
+        helpful: 44
+      }
+    ]
+  },
+  "7": {
+    id: 7,
+    name: "PancakeSwap",
+    slug: "pancakeswap",
+    category: "Exchanges",
+    logo: "https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=200&h=200&fit=crop",
+    bannerGradient: "from-amber-500 via-yellow-500 to-orange-500",
+    rating: 4.6,
+    reviewCount: 11234,
+    description: "PancakeSwap is the top DEX on BNB Chain with yield farming and more. Swap tokens, earn rewards through staking and farming, and participate in lotteries and NFTs. Low fees and high APYs.",
+    verified: true,
+    website: "https://pancakeswap.finance",
+    email: "contact@pancakeswap.finance",
+    founded: "2020",
+    ratingBreakdown: {
+      5: 78,
+      4: 13,
+      3: 5,
+      2: 2,
+      1: 2
+    },
+    features: ["Yield farming", "Staking pools", "Lottery", "NFT marketplace", "Low fees"],
+    reviews: [
+      {
+        id: 1,
+        author: "Sarah Johnson",
+        initials: "SJ",
+        date: "2 days ago",
+        rating: 5,
+        title: "Great for farming rewards",
+        content: "PancakeSwap has some of the best farming APYs. Low fees on BSC make it very accessible. The lottery and prediction markets are fun bonuses. Highly recommend for yield seekers.",
+        verified: true,
+        helpful: 45
+      },
+      {
+        id: 2,
+        author: "Kevin Wong",
+        initials: "KW",
+        date: "4 days ago",
+        rating: 4,
+        title: "Solid BSC DEX",
+        content: "Good liquidity, low fees, and lots of farming options. The UI could use some improvements but overall it's a solid platform. Been using it for over a year.",
+        verified: true,
+        helpful: 32
+      },
+      {
+        id: 3,
+        author: "Lisa Chen",
+        initials: "LC",
+        date: "1 week ago",
+        rating: 5,
+        title: "My favorite BSC platform",
+        content: "Everything I need in one place. Swaps are cheap and fast, farming yields are great, and the CAKE token has good utility. Customer support is helpful too.",
+        verified: false,
+        helpful: 28
+      }
+    ]
+  },
+  "8": {
+    id: 8,
+    name: "Raydium",
+    slug: "raydium",
+    category: "Exchanges",
+    logo: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=200&h=200&fit=crop",
+    bannerGradient: "from-violet-500 via-purple-500 to-fuchsia-500",
+    rating: 4.7,
+    reviewCount: 6789,
+    description: "Raydium is an automated market maker and liquidity provider on Solana. Trade with minimal slippage, provide liquidity to earn fees, and farm RAY tokens. Seamless integration with Serum's order book.",
+    verified: true,
+    website: "https://raydium.io",
+    email: "hello@raydium.io",
+    founded: "2021",
+    ratingBreakdown: {
+      5: 81,
+      4: 11,
+      3: 4,
+      2: 2,
+      1: 2
+    },
+    features: ["AMM on Solana", "Liquidity pools", "Yield farming", "AcceleRaytor launchpad", "Low fees"],
+    reviews: [
+      {
+        id: 1,
+        author: "Daniel Park",
+        initials: "DP",
+        date: "1 day ago",
+        rating: 5,
+        title: "Best Solana AMM",
+        content: "Raydium is fantastic. Fast swaps, great liquidity, and the farming APYs are competitive. The AcceleRaytor launchpad has had some great projects. Solid platform all around.",
+        verified: true,
+        helpful: 49
+      },
+      {
+        id: 2,
+        author: "Jennifer Liu",
+        initials: "JL",
+        date: "3 days ago",
+        rating: 5,
+        title: "Excellent for liquidity providers",
+        content: "Providing liquidity on Raydium has been very profitable. The fees are good and the RAY rewards are nice. Interface is clean and easy to use.",
+        verified: true,
+        helpful: 36
+      },
+      {
+        id: 3,
+        author: "Ryan Mitchell",
+        initials: "RM",
+        date: "1 week ago",
+        rating: 4,
+        title: "Great platform, minor issues",
+        content: "Really like Raydium overall. Swaps are fast and cheap. Had a couple of UI glitches but nothing major. The team is responsive and keeps improving.",
+        verified: false,
+        helpful: 23
+      }
+    ]
+  },
+  "9": {
+    id: 9,
+    name: "Coinbase Card",
+    slug: "coinbase-card",
+    category: "Cards",
+    logo: "https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=200&h=200&fit=crop",
+    bannerGradient: "from-blue-600 via-blue-500 to-cyan-500",
+    rating: 4.4,
+    reviewCount: 7234,
+    description: "The Coinbase Card lets you spend your crypto anywhere Visa is accepted. Earn up to 4% back in crypto rewards on every purchase. Seamless integration with your Coinbase account.",
+    verified: true,
+    website: "https://coinbase.com/card",
+    email: "support@coinbase.com",
+    founded: "2020",
+    ratingBreakdown: {
+      5: 68,
+      4: 18,
+      3: 8,
+      2: 4,
+      1: 2
+    },
+    features: ["4% crypto rewards", "Visa accepted worldwide", "Instant spending", "Mobile app", "No annual fee"],
+    reviews: [
+      {
+        id: 1,
+        author: "Amanda Rodriguez",
+        initials: "AR",
+        date: "2 days ago",
+        rating: 5,
+        title: "Great rewards program",
+        content: "The 4% cashback in crypto is amazing. I use it for all my daily purchases and the rewards add up fast. Card works everywhere and the app makes it easy to manage.",
+        verified: true,
+        helpful: 54
+      },
+      {
+        id: 2,
+        author: "Brian Foster",
+        initials: "BF",
+        date: "5 days ago",
+        rating: 4,
+        title: "Solid crypto card",
+        content: "Good card overall. Rewards are competitive and it's convenient to spend crypto directly. Sometimes transactions take a moment to process but nothing major.",
+        verified: true,
+        helpful: 37
+      },
+      {
+        id: 3,
+        author: "Kelly Zhang",
+        initials: "KZ",
+        date: "1 week ago",
+        rating: 4,
+        title: "Convenient and rewarding",
+        content: "Makes spending crypto super easy. The rewards in XLM or GRT are nice. Wish there were more reward options but can't complain for no annual fee.",
+        verified: false,
+        helpful: 26
+      }
+    ]
+  },
+  "10": {
+    id: 10,
+    name: "KAST",
+    slug: "kast",
+    category: "Cards",
+    logo: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=200&h=200&fit=crop",
+    bannerGradient: "from-indigo-600 via-purple-600 to-violet-600",
+    rating: 4.8,
+    reviewCount: 8234,
+    description: "KAST is a revolutionary global money app that combines the best of traditional banking with Web3 innovation. Save, send, and spend stablecoins with a Visa-integrated card that works everywhere. Experience borderless payments with zero fees and instant settlements.",
+    verified: true,
+    website: "https://kast.xyz",
+    email: "hello@kast.xyz",
+    founded: "2021",
+    ratingBreakdown: {
+      5: 92,
+      4: 5,
+      3: 1,
+      2: 1,
+      1: 1
+    },
+    features: ["Visa integration", "Zero fees", "Instant settlements", "Stablecoin savings", "Global acceptance"],
+    reviews: [
+      {
+        id: 1,
+        author: "Jessica Martinez",
+        initials: "JM",
+        date: "3 days ago",
+        rating: 5,
+        title: "Perfect for international payments",
+        content: "KAST has completely changed how I handle international transactions. No more expensive wire transfers or waiting days for money to arrive. Everything is instant and the fees are practically zero. Highly recommend!",
+        verified: true,
+        helpful: 64
+      },
+      {
+        id: 2,
+        author: "David Kim",
+        initials: "DK",
+        date: "5 days ago",
+        rating: 5,
+        title: "Best crypto card I've used",
+        content: "The Visa card works flawlessly everywhere. Love how I can spend my stablecoins like regular money. The app interface is beautiful and easy to use. Customer service is incredibly responsive.",
+        verified: true,
+        helpful: 51
+      },
+      {
+        id: 3,
+        author: "Emma Wilson",
+        initials: "EW",
+        date: "1 week ago",
+        rating: 5,
+        title: "Game changer for digital nomads",
+        content: "As someone who travels constantly, KAST is a lifesaver. I can pay in any currency without worrying about exchange rates or fees. The instant transfers are amazing. This is the future of money!",
+        verified: true,
+        helpful: 39
+      }
+    ]
+  },
+  "11": {
+    id: 11,
+    name: "Binance Card",
+    slug: "binance-card",
+    category: "Cards",
+    logo: "https://images.unsplash.com/photo-1642104704074-907c0698cbd9?w=200&h=200&fit=crop",
+    bannerGradient: "from-yellow-500 via-amber-500 to-orange-500",
+    rating: 4.3,
+    reviewCount: 5432,
+    description: "The Binance Card allows you to spend your crypto with zero fees and instant conversion. Earn cashback on every purchase and manage everything through the Binance app. Available in 40+ countries.",
+    verified: true,
+    website: "https://binance.com/card",
+    email: "card@binance.com",
+    founded: "2020",
+    ratingBreakdown: {
+      5: 65,
+      4: 20,
+      3: 9,
+      2: 4,
+      1: 2
+    },
+    features: ["Zero conversion fees", "Cashback rewards", "Instant conversion", "Global acceptance", "Mobile app"],
+    reviews: [
+      {
+        id: 1,
+        author: "Thomas Williams",
+        initials: "TW",
+        date: "1 day ago",
+        rating: 5,
+        title: "Great integration with Binance",
+        content: "If you already use Binance, this card is a no-brainer. Zero fees on conversions and decent cashback. Works perfectly everywhere I've tried it.",
+        verified: true,
+        helpful: 42
+      },
+      {
+        id: 2,
+        author: "Maria Garcia",
+        initials: "MG",
+        date: "4 days ago",
+        rating: 4,
+        title: "Convenient for daily use",
+        content: "Makes spending crypto really easy. The instant conversion is great. Customer support could be better but overall happy with the card.",
+        verified: true,
+        helpful: 29
+      },
+      {
+        id: 3,
+        author: "Andrew Chen",
+        initials: "AC",
+        date: "1 week ago",
+        rating: 4,
+        title: "Good value proposition",
+        content: "The zero fees are the main selling point. Cashback is okay. Card design is nice and it's reliable for everyday purchases.",
+        verified: false,
+        helpful: 21
+      }
+    ]
+  },
+  "12": {
+    id: 12,
+    name: "BitPay Card",
+    slug: "bitpay-card",
+    category: "Cards",
+    logo: "https://images.unsplash.com/photo-1640340434855-6084b1f4901c?w=200&h=200&fit=crop",
+    bannerGradient: "from-slate-600 via-slate-500 to-gray-500",
+    rating: 4.2,
+    reviewCount: 3456,
+    description: "The BitPay Card converts and spends crypto in real-time with Mastercard. Load your card with Bitcoin, Ethereum, or other supported crypto and spend anywhere Mastercard is accepted. Simple, secure, and reliable.",
+    verified: true,
+    website: "https://bitpay.com/card",
+    email: "support@bitpay.com",
+    founded: "2020",
+    ratingBreakdown: {
+      5: 62,
+      4: 22,
+      3: 10,
+      2: 4,
+      1: 2
+    },
+    features: ["Mastercard network", "Multi-crypto support", "Real-time conversion", "Mobile wallet", "Contactless payments"],
+    reviews: [
+      {
+        id: 1,
+        author: "Paul Anderson",
+        initials: "PA",
+        date: "3 days ago",
+        rating: 5,
+        title: "Simple and effective",
+        content: "BitPay Card does exactly what it promises. Easy to load, works everywhere, and the conversion rates are fair. Great for people who want to spend Bitcoin.",
+        verified: true,
+        helpful: 35
+      },
+      {
+        id: 2,
+        author: "Rachel Kim",
+        initials: "RK",
+        date: "6 days ago",
+        rating: 4,
+        title: "Good for Bitcoin holders",
+        content: "Nice card for spending Bitcoin without hassle. The app is straightforward and transactions are smooth. Fees are reasonable.",
+        verified: true,
+        helpful: 24
+      },
+      {
+        id: 3,
+        author: "Steven Lee",
+        initials: "SL",
+        date: "2 weeks ago",
+        rating: 4,
+        title: "Reliable crypto spending",
+        content: "Been using BitPay for months. No issues with transactions. Customer service is helpful when needed. Solid option for crypto card.",
+        verified: false,
+        helpful: 18
+      }
+    ]
+  }
+};
+
+// Write Review Dialog Component
+interface WriteReviewDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  project: typeof MOCK_PROJECTS[keyof typeof MOCK_PROJECTS];
+}
+
+function WriteReviewDialog({ isOpen, onClose, project }: WriteReviewDialogProps) {
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const submitReviewMutation = useMutation({
+    mutationFn: async (reviewData: any) => {
+      return await apiRequest("POST", "/api/project-reviews", reviewData);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Review submitted!",
+        description: "Your review has been published and will appear on the home feed.",
+      });
+      setRating(0);
+      setTitle("");
+      setContent("");
+      onClose();
+      // Invalidate both the general project reviews list and this specific project's reviews
+      queryClient.invalidateQueries({ queryKey: ["/api/project-reviews"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/project-reviews", String(project.id)] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to submit review",
+        description: error.message || "Please try again later.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (rating === 0) {
+      toast({
+        title: "Rating required",
+        description: "Please select a star rating for your review.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (content.trim().length < 10) {
+      toast({
+        title: "Review too short",
+        description: "Please write at least 10 characters in your review.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    submitReviewMutation.mutate({
+      projectId: project.id,
+      projectName: project.name,
+      projectLogo: project.logo,
+      projectSlug: project.slug,
+      rating,
+      title: title.trim() || null,
+      content: content.trim(),
+    });
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="dialog-write-review">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold flex items-center gap-3">
+            <img 
+              src={project.logo} 
+              alt={project.name}
+              className="w-10 h-10 rounded-lg object-cover"
+            />
+            Review {project.name}
+          </DialogTitle>
+          <DialogDescription>
+            Share your experience to help others make informed decisions
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-6 mt-4">
+          <div>
+            <label className="block text-sm font-semibold text-black dark:text-white mb-2">
+              Rating <span className="text-red-500">*</span>
+            </label>
+            <div className="flex items-center gap-2">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setRating(star)}
+                  onMouseEnter={() => setHoverRating(star)}
+                  onMouseLeave={() => setHoverRating(0)}
+                  className="transition-transform hover:scale-110"
+                  data-testid={`button-rating-${star}`}
+                >
+                  <Star
+                    className={`w-10 h-10 ${
+                      star <= (hoverRating || rating)
+                        ? "fill-primary text-primary"
+                        : "text-gray-300 dark:text-gray-700"
+                    }`}
+                  />
+                </button>
+              ))}
+              {rating > 0 && (
+                <span className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {rating} {rating === 1 ? "star" : "stars"}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="review-title" className="block text-sm font-semibold text-black dark:text-white mb-2">
+              Title (optional)
+            </label>
+            <Input
+              id="review-title"
+              type="text"
+              placeholder="Summarize your experience..."
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              maxLength={100}
+              data-testid="input-review-title"
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              {title.length}/100 characters
+            </p>
+          </div>
+
+          <div>
+            <label htmlFor="review-content" className="block text-sm font-semibold text-black dark:text-white mb-2">
+              Your Review <span className="text-red-500">*</span>
+            </label>
+            <Textarea
+              id="review-content"
+              placeholder="Tell us about your experience with this project..."
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              rows={6}
+              maxLength={1000}
+              className="resize-none"
+              data-testid="textarea-review-content"
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              {content.length}/1000 characters (minimum 10)
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 pt-4 border-t border-gray-200 dark:border-gray-800">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={submitReviewMutation.isPending}
+              data-testid="button-cancel-review"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              className="flex-1 bg-primary hover:bg-primary/90 text-black font-bold"
+              disabled={submitReviewMutation.isPending}
+              data-testid="button-submit-review"
+            >
+              {submitReviewMutation.isPending ? "Submitting..." : "Submit Review"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export default function ProjectDetail() {
+  const { projectId } = useParams();
+  const [activeTab, setActiveTab] = useState("summary");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterRating, setFilterRating] = useState<string>("all");
+  const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  // Get project data or default to KAST
+  const project = MOCK_PROJECTS[projectId as keyof typeof MOCK_PROJECTS] || MOCK_PROJECTS["10"];
+
+  // Fetch real project reviews from database
+  const { data: projectReviews = [], isLoading } = useQuery({
+    queryKey: ["/api/project-reviews", projectId],
+    queryFn: async () => {
+      const response = await fetch(`/api/project-reviews/${projectId}`);
+      if (!response.ok) throw new Error("Failed to fetch reviews");
+      return response.json();
+    },
+  });
+
+  // Calculate real statistics from database reviews
+  const totalReviews = projectReviews.length;
+  const averageRating = totalReviews > 0
+    ? projectReviews.reduce((sum: number, r: any) => sum + r.rating, 0) / totalReviews
+    : project.rating;
+
+  // Calculate rating breakdown
+  const ratingBreakdown = {
+    5: projectReviews.filter((r: any) => r.rating === 5).length,
+    4: projectReviews.filter((r: any) => r.rating === 4).length,
+    3: projectReviews.filter((r: any) => r.rating === 3).length,
+    2: projectReviews.filter((r: any) => r.rating === 2).length,
+    1: projectReviews.filter((r: any) => r.rating === 1).length,
+  };
+
+  // Filter and sort reviews
+  const filteredReviews = projectReviews
+    .filter((review: any) => {
+      const matchesSearch = searchQuery === "" || 
+        (review.title && review.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        review.content.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      const matchesRating = filterRating === "all" || review.rating === parseInt(filterRating);
+      
+      return matchesSearch && matchesRating;
+    })
+    .sort((a: any, b: any) => {
+      // Sort by helpful count (featured reviews first)
+      // If helpful counts are equal, sort by date (most recent first)
+      if (b.helpful !== a.helpful) {
+        return b.helpful - a.helpful;
+      }
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-black">
+      <ModernNav />
+
+      {/* Clean Header - No purple banner */}
+      <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <Link href="/projects" className="text-primary hover:underline text-sm mb-4 inline-block" data-testid="link-back-to-projects">
+            ← Back to Projects
+          </Link>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Project Info Card */}
+            <Card className="border-2 border-gray-200 dark:border-gray-800">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-6">
+                  <img
+                    src={project.logo}
+                    alt={project.name}
+                    className="w-24 h-24 rounded-2xl shadow-lg object-cover"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h2 className="text-3xl font-bold text-black dark:text-white">
+                        {project.name}
+                      </h2>
+                      {project.verified && (
+                        <Shield className="w-6 h-6 fill-primary text-primary" />
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <Badge variant="outline" className="text-sm">
+                        {project.category}
+                      </Badge>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                        • Reviews {project.reviewCount.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <Button
+                        className="bg-primary hover:bg-primary/90 text-black font-bold"
+                        onClick={() => setIsReviewDialogOpen(true)}
+                        data-testid="button-write-review"
+                      >
+                        <Star className="w-4 h-4 mr-2" />
+                        Write a Review
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="border-2"
+                        asChild
+                        data-testid="button-visit-website"
+                      >
+                        <a href={project.website} target="_blank" rel="noopener noreferrer">
+                          Visit website
+                          <ExternalLink className="w-4 h-4 ml-2" />
+                        </a>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Info Banner */}
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+                <p className="text-sm text-blue-900 dark:text-blue-100">
+                  All reviews are blockchain-verified and cannot be altered or deleted. This ensures complete transparency and authenticity.
+                </p>
+              </div>
+            </div>
+
+            {/* Tabs */}
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="w-full bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 rounded-none h-auto p-0">
+                <TabsTrigger
+                  value="summary"
+                  className="flex-1 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none py-3"
+                  data-testid="tab-summary"
+                >
+                  Summary
+                </TabsTrigger>
+                <TabsTrigger
+                  value="about"
+                  className="flex-1 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none py-3"
+                  data-testid="tab-about"
+                >
+                  About
+                </TabsTrigger>
+                <TabsTrigger
+                  value="reviews"
+                  className="flex-1 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none py-3"
+                  data-testid="tab-reviews"
+                >
+                  Reviews
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Summary Tab */}
+              <TabsContent value="summary" className="space-y-6 mt-6">
+                {/* AI Summary */}
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-lg font-bold text-black dark:text-white">Review Summary</h3>
+                      <Badge variant="outline" className="bg-primary/10 text-primary border-primary">
+                        AI Generated
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Based on {totalReviews.toLocaleString()} reviews</p>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                      Reviewers overwhelmingly praise {project.name} for its exceptional user experience and reliability. 
+                      Customers consistently highlight the platform's intuitive interface, robust security features, and 
+                      outstanding customer support. The service's ability to provide seamless transactions and innovative 
+                      features has earned it strong recommendations from users worldwide.
+                    </p>
+                  </CardContent>
+                </Card>
+
+                {/* Recent Reviews */}
+                <div>
+                  <h3 className="text-xl font-bold text-black dark:text-white mb-4">
+                    Recent Reviews
+                  </h3>
+                  <div className="space-y-4">
+                    {project.reviews.map((review) => (
+                      <ReviewCard key={review.id} review={review} />
+                    ))}
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="w-full mt-4 border-2 hover:border-primary"
+                    data-testid="button-see-all-reviews"
+                    onClick={() => setActiveTab("reviews")}
+                  >
+                    See all {totalReviews.toLocaleString()} reviews
+                  </Button>
+                </div>
+              </TabsContent>
+
+              {/* About Tab */}
+              <TabsContent value="about" className="space-y-6 mt-6">
+                <Card>
+                  <CardHeader>
+                    <h3 className="text-lg font-bold text-black dark:text-white">About {project.name}</h3>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                      {project.description}
+                    </p>
+
+                    <div>
+                      <h4 className="font-semibold text-black dark:text-white mb-3">Key Features</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {project.features.map((feature, index) => (
+                          <div key={index} className="flex items-center gap-2">
+                            <CheckCircle2 className="w-4 h-4 text-primary" />
+                            <span className="text-sm text-gray-700 dark:text-gray-300">{feature}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="border-t border-gray-200 dark:border-gray-800 pt-6">
+                      <h4 className="font-semibold text-black dark:text-white mb-4">Contact Information</h4>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
+                          <Globe className="w-5 h-5 text-primary" />
+                          <a href={project.website} target="_blank" rel="noopener noreferrer" className="hover:text-primary hover:underline">
+                            {project.website}
+                          </a>
+                        </div>
+                        <div className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
+                          <Mail className="w-5 h-5 text-primary" />
+                          <span>{project.email}</span>
+                        </div>
+                        <div className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
+                          <Calendar className="w-5 h-5 text-primary" />
+                          <span>Founded in {project.founded}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Reviews Tab */}
+              <TabsContent value="reviews" className="space-y-6 mt-6">
+                {/* Search and Filter */}
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Input
+                      type="text"
+                      placeholder="Search reviews by author, title, or content..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10"
+                      data-testid="input-search-reviews"
+                    />
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery("")}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                        data-testid="button-clear-search"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                  <Select value={filterRating} onValueChange={setFilterRating}>
+                    <SelectTrigger className="w-full sm:w-[180px] border-2" data-testid="select-filter-rating">
+                      <SelectValue placeholder="All ratings" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All ratings</SelectItem>
+                      <SelectItem value="5">5 stars</SelectItem>
+                      <SelectItem value="4">4 stars</SelectItem>
+                      <SelectItem value="3">3 stars</SelectItem>
+                      <SelectItem value="2">2 stars</SelectItem>
+                      <SelectItem value="1">1 star</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Results count */}
+                {(searchQuery || filterRating !== "all") && (
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    Showing {filteredReviews.length} of {totalReviews} reviews
+                  </div>
+                )}
+
+                {/* All Reviews */}
+                <div className="space-y-4">
+                  {isLoading ? (
+                    <Card className="border border-gray-200 dark:border-gray-800">
+                      <CardContent className="p-12 text-center">
+                        <p className="text-gray-600 dark:text-gray-400">Loading reviews...</p>
+                      </CardContent>
+                    </Card>
+                  ) : filteredReviews.length > 0 ? (
+                    filteredReviews.map((review: any) => (
+                      <ReviewCard key={review.id} review={review} />
+                    ))
+                  ) : (
+                    <Card className="border border-gray-200 dark:border-gray-800">
+                      <CardContent className="p-12 text-center">
+                        <Search className="w-12 h-12 text-gray-300 dark:text-gray-700 mx-auto mb-4" />
+                        <h3 className="font-semibold text-lg text-black dark:text-white mb-2">
+                          No reviews found
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-400 mb-4">
+                          Try adjusting your search or filter criteria
+                        </p>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setSearchQuery("");
+                            setFilterRating("all");
+                          }}
+                          data-testid="button-reset-filters"
+                        >
+                          Reset filters
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Rating Card */}
+            <Card className="border-2 border-gray-200 dark:border-gray-800 sticky top-4">
+              <CardContent className="p-6">
+                <div className="text-center mb-6">
+                  <div className="text-6xl font-bold text-black dark:text-white mb-2">
+                    {averageRating}
+                  </div>
+                  <div className="flex justify-center mb-2">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`w-5 h-5 ${
+                          i < Math.floor(averageRating)
+                            ? "fill-primary text-primary"
+                            : "text-gray-300 dark:text-gray-700"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <div className="inline-block bg-primary text-black px-3 py-1 rounded-full text-sm font-bold mb-2">
+                    Excellent
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {totalReviews.toLocaleString()} reviews
+                  </p>
+                </div>
+
+                {/* Rating Breakdown */}
+                <div className="space-y-3">
+                  {[5, 4, 3, 2, 1].map((stars) => (
+                    <div key={stars} className="flex items-center gap-3">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300 w-12">
+                        {stars}-star
+                      </span>
+                      <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-primary rounded-full"
+                          style={{ 
+                            width: totalReviews > 0 
+                              ? `${(ratingBreakdown[stars as keyof typeof ratingBreakdown] / totalReviews) * 100}%` 
+                              : '0%'
+                          }}
+                        />
+                      </div>
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300 w-10 text-right">
+                        {totalReviews > 0 
+                          ? Math.round((ratingBreakdown[stars as keyof typeof ratingBreakdown] / totalReviews) * 100)
+                          : 0}%
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="border-t border-gray-200 dark:border-gray-800 mt-6 pt-6">
+                  <div className="flex items-start gap-3 text-sm text-gray-600 dark:text-gray-400">
+                    <TrendingUp className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                    <p>
+                      Replied to 100% of reviews
+                      <br />
+                      <span className="text-xs">Typically responds within 1 day</span>
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* CTA Card */}
+            <Card className="border-2 border-primary bg-gradient-to-br from-primary/10 to-primary/5">
+              <CardContent className="p-6 text-center">
+                <TrendingUp className="w-12 h-12 text-primary mx-auto mb-4" />
+                <h3 className="font-bold text-black dark:text-white mb-2">
+                  Share your experience
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  Help others make informed decisions
+                </p>
+                <Button 
+                  className="w-full bg-primary hover:bg-primary/90 text-black font-bold"
+                  onClick={() => setIsReviewDialogOpen(true)}
+                  data-testid="button-write-review-sidebar"
+                >
+                  Write a Review
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+
+      {/* Write Review Dialog */}
+      <WriteReviewDialog 
+        isOpen={isReviewDialogOpen}
+        onClose={() => setIsReviewDialogOpen(false)}
+        project={project}
+      />
+    </div>
+  );
+}
+
+function ReviewCard({ review }: { review: any }) {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  // Format the date
+  const reviewDate = new Date(review.createdAt || review.created_at);
+  const formattedDate = reviewDate.toLocaleDateString('en-US', { 
+    month: 'short', 
+    day: 'numeric', 
+    year: 'numeric' 
+  });
+
+  // Get user information
+  const user = review.user;
+  const displayName = user?.username || user?.twitterHandle || "Anonymous User";
+  
+  // Generate initials from user's name
+  const getInitials = () => {
+    if (user?.firstName && user?.lastName) {
+      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+    }
+    if (user?.username && user.username.length >= 2) {
+      return user.username.substring(0, 2).toUpperCase();
+    }
+    if (user?.username && user.username.length === 1) {
+      return user.username[0].toUpperCase();
+    }
+    if (user?.twitterHandle && user.twitterHandle.length >= 2) {
+      return user.twitterHandle.substring(0, 2).toUpperCase();
+    }
+    if (user?.twitterHandle && user.twitterHandle.length === 1) {
+      return user.twitterHandle[0].toUpperCase();
+    }
+    return "AU";
+  };
+  
+  const initials = getInitials();
+
+  // Mutation to mark review as helpful
+  const markHelpfulMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", `/api/project-reviews/${review.id}/helpful`);
+      return response.json();
+    },
+    onSuccess: () => {
+      // Invalidate both project-specific and all reviews queries
+      queryClient.invalidateQueries({ queryKey: ['/api/project-reviews', review.projectId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/project-reviews'] });
+      toast({
+        title: "Thank you!",
+        description: "Your feedback has been recorded."
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to mark review as helpful. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  return (
+    <Card className="border border-gray-200 dark:border-gray-800 hover:border-primary/50 transition-colors" data-testid={`review-card-${review.id}`}>
+      <CardContent className="p-6">
+        <div className="flex items-start gap-4">
+          {/* Avatar */}
+          {user?.profileImageUrl ? (
+            <img 
+              src={user.profileImageUrl} 
+              alt={displayName}
+              className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+            />
+          ) : (
+            <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary/60 rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-black font-bold">{initials}</span>
+            </div>
+          )}
+
+          <div className="flex-1 min-w-0">
+            {/* Header */}
+            <div className="flex items-start justify-between mb-2">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h4 className="font-semibold text-black dark:text-white" data-testid={`review-author-${review.id}`}>
+                    {displayName}
+                  </h4>
+                  {review.verified && (
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs" data-testid={`review-verified-${review.id}`}>
+                      <CheckCircle2 className="w-3 h-3 mr-1" />
+                      Verified
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{formattedDate}</p>
+              </div>
+            </div>
+
+            {/* Rating */}
+            <div className="flex items-center gap-2 mb-3" data-testid={`review-rating-${review.id}`}>
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  className={`w-4 h-4 ${
+                    i < review.rating ? "fill-primary text-primary" : "text-gray-300 dark:text-gray-700"
+                  }`}
+                />
+              ))}
+            </div>
+
+            {/* Content */}
+            {review.title && (
+              <h5 className="font-semibold text-black dark:text-white mb-2" data-testid={`review-title-${review.id}`}>{review.title}</h5>
+            )}
+            <p className="text-gray-700 dark:text-gray-300 mb-4" data-testid={`review-content-${review.id}`}>{review.content}</p>
+
+            {/* Actions */}
+            <div className="flex items-center gap-4 text-sm">
+              <button 
+                onClick={() => markHelpfulMutation.mutate()}
+                disabled={markHelpfulMutation.isPending}
+                className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
+                data-testid={`button-helpful-${review.id}`}
+              >
+                <ThumbsUp className="w-4 h-4" />
+                {markHelpfulMutation.isPending ? "..." : `Helpful (${review.helpful})`}
+              </button>
+              <button className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-primary transition-colors" data-testid={`button-share-${review.id}`}>
+                <Share2 className="w-4 h-4" />
+                Share
+              </button>
+              <button className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-red-500 transition-colors" data-testid={`button-report-${review.id}`}>
+                <Flag className="w-4 h-4" />
+                Report
+              </button>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
