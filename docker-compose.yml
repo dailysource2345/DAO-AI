@@ -1,0 +1,21 @@
+version: "3.8"
+
+services:
+  daoai-rofl:
+    image: node:20-slim
+    platform: linux/amd64
+    working_dir: /app
+    command: ["node", "src/server.js"]
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=production
+      - PORT=8080
+    volumes:
+      - ./src:/app/src:ro
+      - ./package.json:/app/package.json:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

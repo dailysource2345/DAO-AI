@@ -1,0 +1,34 @@
+# Oasis ROFL Configuration for DAO AI Confidential Compute
+# Deployed to Sapphire Mainnet
+
+# App ID (already created on-chain)
+app_id: rofl1qzglgeruunrxwhnlq995swevax8ue0j57v6fy0ll
+
+# Network configuration
+network: mainnet
+paratime: sapphire
+
+# Application metadata
+name: daoai-rofl-identity
+version: 1.0.0
+description: Confidential wallet-to-social identity linking for DAO AI
+
+# Resource requirements for TEE
+resources:
+  tee: tdx
+  memory: 2048
+  cpus: 2
+  storage:
+    kind: ram
+    size: 512
+
+# Policy configuration
+policy:
+  quotes:
+    pcs:
+      tcb_validity_period: 30
+      min_tcb_evaluation_data_number: 17
+      tdx: {}
+
+# Compose file for deployment
+compose: compose.yaml
